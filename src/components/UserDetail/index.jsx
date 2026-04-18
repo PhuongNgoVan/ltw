@@ -1,24 +1,62 @@
-import React from "react";
-import {Typography} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Button, Card, CardContent, Typography } from "@mui/material";
+import { Link, useParams } from "react-router-dom";
 
 import "./styles.css";
-import {useParams} from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define UserDetail, a React component of Project 4.
  */
 function UserDetail() {
-    const user = useParams();
-    return (
-        <>
-          <Typography variant="body1">
-            This should be the UserDetail view of the PhotoShare app. Since it is
-            invoked from React Router the params from the route will be in property match.
-            So this should show details of user: {user.userId}.
-            You can fetch the model for the user from models.userModel.
-          </Typography>
-        </>
-    );
-}
+  const { userId } = useParams();
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    fetchModel(`/user/${userId}`)
+      .then((response) => {
+        if (response && response.data) {
+          setUser(response.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching user detail:", error);
+      });
+  }, [userId]); // Chạy lại mỗi khi ID trên URL thay đổi
+
+  if (!user) {
+    return <Typography variant="body1">Loading user information...</Typography>;
+  }
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h5" gutterBottom>
+          {user.first_name} {user.last_name}
+        </Typography>
+
+        <Typography variant="body1" gutterBottom>
+          <strong>Location:</strong> {user.location}
+        </Typography>
+
+        <Typography variant="body1" gutterBottom>
+          <strong>Occupation:</strong> {user.occupation}
+        </Typography>
+
+        <Typography variant="body1" gutterBottom>
+          <strong>Description:</strong> {user.description}
+        </Typography>
+
+        <Button
+          variant="contained"
+          component={Link}
+          to={`/photos/${user._id}`}
+          sx={{ mt: 2 }}
+        >
+          View Photos
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 export default UserDetail;

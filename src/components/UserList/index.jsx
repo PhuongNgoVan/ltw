@@ -1,43 +1,62 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Divider,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Typography,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 
 import "./styles.css";
-import models from "../../modelData/models";
+import fetchModel from "../../lib/fetchModelData";
 
-/**
- * Define UserList, a React component of Project 4.
- */
-function UserList () {
-    const users = models.userListModel();
-    return (
-      <div>
-        <Typography variant="body1">
-          This is the user list, which takes up 3/12 of the window. You might
-          choose to use <a href="https://mui.com/components/lists/">Lists</a>{" "}
-          and <a href="https://mui.com/components/dividers/">Dividers</a> to
-          display your users like so:
-        </Typography>
-        <List component="nav">
-          {users.map((item) => (
-            <>
-              <ListItem>
-                      <ListItemText primary={item.first_name}/>
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+ useEffect(() => {
+  // Chỉ cần một lượt gọi duy nhất với đường dẫn tương đối (endpoint)
+  fetchModel("/user/list")
+    .then((response) => {
+      // Hàm fetchModel mới đã tự động bọc dữ liệu vào { data: ... }
+      if (response && response.data) {
+        setUsers(response.data);
+      }
+    })
+    .catch((error) => {
+      console.error("Lỗi kết nối Backend:", error);
+    });
+}, []); // Đảm bảo mảng phụ thuộc rỗng để chỉ chạy 1 lần khi mount
+
+  return (
+    <div>
+      <Typography variant="h6" sx={{ mb: 1, p: 2 }}>
+        Users List
+      </Typography>
+
+      <List component="nav">
+        {users.length > 0 ? (
+          users.map((user) => (
+            <React.Fragment key={user._id}>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to={`/users/${user._id}`}>
+                  <ListItemText
+                    primary={`${user.first_name} ${user.last_name}`}
+                  />
+                </ListItemButton>
               </ListItem>
               <Divider />
-            </>
-          ))}
-        </List>
-        <Typography variant="body1">
-          The model comes in from models.userListModel()
-        </Typography>
-      </div>
-    );
+            </React.Fragment>
+          ))
+        ) : (
+          <Typography variant="body2" sx={{ p: 2 }}>
+            Đang tải dữ liệu hoặc lỗi kết nối...
+          </Typography>
+        )}
+      </List>
+    </div>
+  );
 }
 
 export default UserList;
